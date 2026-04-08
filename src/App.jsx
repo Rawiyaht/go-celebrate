@@ -27,7 +27,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [customEventName, setCustomEventName] = useState("");
   const [screen, setScreen] = useState("home");
-  const [form, setForm] = useState({ eventName: "", hostName: "", date: "", location: "" });
+  const [form, setForm] = useState({ eventName: "", hostName: "", date: "", location: "", registryLink: "" });
   const [guests, setGuests] = useState([]);
   const [newGuest, setNewGuest] = useState({ name: "", bringing: "", familyCount: 1, rsvp: "Pending" });
   const [selectedTheme, setSelectedTheme] = useState(presetThemes[0]);
@@ -44,19 +44,19 @@ export default function App() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const handleGuestChange = (e) => setNewGuest({ ...newGuest, [e.target.name]: e.target.value });
-
-  const saveEventToSupabase = async () => {
-    setSaving(true);
-    const code = generateCode();
-    const { data, error } = await supabase.from("events").insert([{
-      event_name: form.eventName,
-      host_name: form.hostName,
-      date: form.date,
-      location: form.location,
-      event_type: selected,
-      theme_color: theme.primary,
-      share_code: code,
-    }]).select();
+const saveEventToSupabase = async () => {
+  setSaving(true);
+const code = generateCode();
+  const { data, error } = await supabase.from("events").insert([{
+  event_name: form.eventName,
+  host_name: form.hostName,
+  date: form.date,
+  location: form.location,
+  registry_link: form.registryLink,   // ADD THIS LINE
+  event_type: selected,
+  theme_color: theme.primary,
+  share_code: code,
+}]).select();
 
     if (error) {
       alert("Error saving event: " + error.message);
@@ -113,6 +113,30 @@ export default function App() {
     fontWeight: "bold",
     marginTop: "20px",
   };
+  const styles = {
+  subtitle: { color: "#666", marginBottom: "24px", fontSize: "1.1rem" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", width: "100%", maxWidth: "480px" },
+  card: { background: "white", borderRadius: "16px", padding: "20px", textAlign: "center", cursor: "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.08)" },
+  emoji: { fontSize: "2.5rem", marginBottom: "8px" },
+  cardLabel: { fontWeight: "600", fontSize: "0.95rem", color: "#333" },
+  formBox: { background: "white", borderRadius: "20px", padding: "28px", width: "100%", maxWidth: "480px", boxShadow: "0 4px 20px rgba(0,0,0,0.10)" },
+  label: { fontWeight: "600", color: "#444", marginBottom: "6px", display: "block", marginTop: "14px" },
+  input: { width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1.5px solid #e0e0e0", fontSize: "1rem", boxSizing: "border-box", marginBottom: "4px" },
+  themeGrid: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "8px" },
+  themeChip: { width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer" },
+  backButton: { background: "none", border: "none", color: "#888", cursor: "pointer", marginTop: "12px", fontSize: "0.95rem" },
+  shareBox: { background: "white", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "480px", textAlign: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.08)", marginBottom: "16px" },
+  summaryBar: { display: "flex", gap: "12px", marginBottom: "16px", width: "100%", maxWidth: "480px" },
+  summaryItem: { flex: 1, background: "white", borderRadius: "12px", padding: "12px", textAlign: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.07)" },
+  summaryNumber: { fontSize: "1.5rem", fontWeight: "800", display: "block" },
+  summaryLabel: { fontSize: "0.75rem", color: "#888", fontWeight: "600" },
+  guestCard: { display: "flex", alignItems: "center", justifyContent: "space-between", background: "white", borderRadius: "14px", padding: "14px 16px", marginBottom: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.07)" },
+  guestInfo: { flex: 1 },
+  guestName: { fontWeight: "700", fontSize: "1rem", margin: "0 0 2px 0" },
+  guestDetail: { color: "#666", fontSize: "0.85rem", margin: "2px 0" },
+  rsvpBadge: { borderRadius: "20px", padding: "4px 12px", fontSize: "0.8rem", fontWeight: "700" },
+  deleteBtn: { background: "none", border: "none", color: "#ccc", fontSize: "1.2rem", cursor: "pointer", marginLeft: "8px" },
+};
 
   // HOME SCREEN
   if (screen === "home") {
@@ -159,6 +183,8 @@ export default function App() {
           <input style={styles.input} name="date" type="date" value={form.date} onChange={handleChange} />
           <label style={styles.label}>Location</label>
           <input style={styles.input} name="location" placeholder="e.g. 123 Main St" value={form.location} onChange={handleChange} />
+          <label style={styles.label}>🎁 Registry Link (optional)</label>
+<input style={styles.input} name="registryLink" placeholder="e.g. https://www.amazon.ca/baby-reg/..." value={form.registryLink} onChange={handleChange} />
 
           <label style={{ ...styles.label, marginTop: "20px" }}>🎨 Choose a Theme</label>
           <div style={styles.themeGrid}>
@@ -201,7 +227,15 @@ export default function App() {
           </div>
         )}
 
-        <div style={styles.summaryBar}>
+    {form.registryLink && (
+  <div style={styles.shareBox}>
+    <p style={{ margin: 0, fontWeight: "700", color: "#333" }}>🎁 Registry</p>
+    <a href={form.registryLink} target="_blank" rel="noopener noreferrer" style={{ color: theme.primary, fontWeight: "700", fontSize: "1rem", wordBreak: "break-all" }}>View Registry →</a>
+  </div>
+
+)}
+
+<div style={styles.summaryBar}>
           <div style={styles.summaryItem}>
             <span style={{ ...styles.summaryNumber, color: theme.primary }}>{guests.length}</span>
             <span style={styles.summaryLabel}>Guests</span>
@@ -254,28 +288,3 @@ export default function App() {
     );
   }
 }
-
-const styles = {
-  subtitle: { fontSize: "1.1rem", color: "#888", marginBottom: "24px" },
-  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "30px" },
-  card: { background: "white", borderRadius: "16px", padding: "30px 20px", textAlign: "center", cursor: "pointer", boxShadow: "0 4px 15px rgba(0,0,0,0.08)", minWidth: "140px" },
-  emoji: { fontSize: "2.5rem", marginBottom: "10px" },
-  cardLabel: { fontSize: "1rem", fontWeight: "600", color: "#333" },
-  formBox: { background: "white", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "480px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column" },
-  label: { fontSize: "0.9rem", fontWeight: "600", color: "#555", marginBottom: "6px", marginTop: "12px" },
-  input: { padding: "12px", borderRadius: "10px", border: "1px solid #ddd", fontSize: "1rem", outline: "none" },
-  backButton: { background: "transparent", color: "#888", border: "none", padding: "10px", fontSize: "1rem", cursor: "pointer", marginTop: "10px" },
-  summaryBar: { display: "flex", gap: "20px", background: "white", borderRadius: "16px", padding: "16px 30px", marginBottom: "20px", boxShadow: "0 4px 15px rgba(0,0,0,0.08)" },
-  summaryItem: { display: "flex", flexDirection: "column", alignItems: "center" },
-  summaryNumber: { fontSize: "1.8rem", fontWeight: "800" },
-  summaryLabel: { fontSize: "0.8rem", color: "#888" },
-  guestCard: { background: "white", borderRadius: "14px", padding: "16px", marginBottom: "12px", boxShadow: "0 2px 10px rgba(0,0,0,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  guestInfo: { display: "flex", flexDirection: "column", gap: "4px" },
-  guestName: { fontWeight: "700", fontSize: "1rem", color: "#333", margin: 0 },
-  guestDetail: { fontSize: "0.85rem", color: "#666", margin: 0 },
-  rsvpBadge: { padding: "3px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "600", width: "fit-content", marginTop: "4px" },
-  deleteBtn: { background: "none", border: "none", color: "#ccc", fontSize: "1.2rem", cursor: "pointer" },
-  themeGrid: { display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" },
-  themeChip: { width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer" },
-  shareBox: { background: "white", borderRadius: "16px", padding: "20px", textAlign: "center", marginBottom: "20px", boxShadow: "0 4px 15px rgba(0,0,0,0.08)", width: "100%", maxWidth: "480px" },
-};
